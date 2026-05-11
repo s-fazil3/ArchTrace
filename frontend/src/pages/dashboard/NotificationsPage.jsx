@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, CheckCircle, AlertCircle, Info, Trash2, X, Bell, Check, Undo2, ArrowLeft, Filter } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
+import { API_BASE_URL } from '../../apiConfig';
 
 const timeAgo = (dateStr) => {
     if (!dateStr) return 'just now';
@@ -31,7 +32,7 @@ export default function NotificationsPage() {
         try {
             const token = localStorage.getItem('archtrace_token');
             if (!token) return;
-            const res = await fetch('http://localhost:8080/api/notifications', {
+            const res = await fetch(`${API_BASE_URL}/api/notifications`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -53,7 +54,7 @@ export default function NotificationsPage() {
         if (isRead) return;
         try {
             const token = localStorage.getItem('archtrace_token');
-            await fetch(`http://localhost:8080/api/notifications/${id}/read`, {
+            await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -67,7 +68,7 @@ export default function NotificationsPage() {
         e.stopPropagation();
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch(`http://localhost:8080/api/notifications/${id}/resolve`, {
+            const res = await fetch(`${API_BASE_URL}/api/notifications/${id}/resolve`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -89,7 +90,7 @@ export default function NotificationsPage() {
         e.stopPropagation();
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch(`http://localhost:8080/api/notifications/${id}/acknowledge`, {
+            const res = await fetch(`${API_BASE_URL}/api/notifications/${id}/acknowledge`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -107,7 +108,7 @@ export default function NotificationsPage() {
         e.stopPropagation();
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch(`http://localhost:8080/api/notifications/${id}`, {
+            const res = await fetch(`${API_BASE_URL}/api/notifications/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -124,7 +125,7 @@ export default function NotificationsPage() {
         if (!window.confirm("Clear all notification history from your inbox?")) return;
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch('http://localhost:8080/api/notifications/clear-all', {
+            const res = await fetch(`${API_BASE_URL}/api/notifications/clear-all`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, User, Building, Search, Edit2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../apiConfig';
+import { Shield, User, Building, Search, Edit2 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 
 export default function AdminUserManagement() {
@@ -18,7 +19,7 @@ export default function AdminUserManagement() {
     const fetchTeams = async () => {
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch('http://localhost:8080/api/teams', {
+            const res = await fetch(`${API_BASE_URL}/api/teams`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -32,7 +33,7 @@ export default function AdminUserManagement() {
     const fetchUsers = async () => {
         try {
             const token = localStorage.getItem('archtrace_token');
-            const response = await fetch('http://localhost:8080/users', {
+            const response = await fetch(`${API_BASE_URL}/api/users`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -49,7 +50,7 @@ export default function AdminUserManagement() {
     const handleRoleChange = async (userId, newRole) => {
         try {
             const token = localStorage.getItem('archtrace_token');
-            const response = await fetch(`http://localhost:8080/users/${userId}/role`, {
+            const response = await fetch(`${API_BASE_URL}/api/users/${userId}/role`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +78,7 @@ export default function AdminUserManagement() {
     const handleTeamChange = async (userId, newTeam) => {
         try {
             const token = localStorage.getItem('archtrace_token');
-            const response = await fetch(`http://localhost:8080/users/${userId}/team`, {
+            const response = await fetch(`${API_BASE_URL}/api/users/${userId}/team`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

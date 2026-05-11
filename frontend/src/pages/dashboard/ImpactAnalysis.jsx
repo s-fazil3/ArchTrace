@@ -5,6 +5,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../apiConfig';
 
 const changeTypes = ["API Update", "Version Upgrade", "Schema Change", "Contract Breaking", "Configuration Update"];
 
@@ -25,10 +26,10 @@ export default function ImpactAnalysis() {
     useEffect(() => {
         const fetchServices = async () => {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch('http://localhost:8080/api/services', {
+            const response = await fetch(`${API_BASE_URL}/api/services`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) setServices(await res.json());
+            if (response.ok) setServices(await response.json());
         };
         fetchServices();
     }, []);
@@ -42,7 +43,7 @@ export default function ImpactAnalysis() {
         const token = localStorage.getItem('archtrace_token'); // ✅ Moved here so it's in scope for setTimeout
 
         try {
-            const depRes = await fetch('http://localhost:8080/api/dependencies', {
+            const depRes = await fetch(`${API_BASE_URL}/api/dependencies`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const deps = depRes.ok ? await depRes.json() : [];
@@ -154,7 +155,7 @@ export default function ImpactAnalysis() {
 
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch('http://localhost:8080/api/notifications', {
+            const res = await fetch(`${API_BASE_URL}/api/notifications`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -191,7 +192,7 @@ export default function ImpactAnalysis() {
 
             try {
                 const token = localStorage.getItem('archtrace_token');
-                await fetch('http://localhost:8080/api/notifications', {
+                await fetch(`${API_BASE_URL}/api/notifications`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,

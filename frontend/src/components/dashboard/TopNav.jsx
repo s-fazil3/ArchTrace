@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../Toast';
+import { API_BASE_URL } from '../../apiConfig';
 
 function timeAgo(dateString) {
     if (!dateString) return '';
@@ -31,7 +32,7 @@ export default function TopNav() {
         try {
             const token = localStorage.getItem('archtrace_token');
             if (!token) return;
-            const res = await fetch('http://localhost:8080/api/notifications', {
+            const res = await fetch(`${API_BASE_URL}/api/notifications`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -61,7 +62,7 @@ export default function TopNav() {
         if (isRead) return;
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch(`http://localhost:8080/api/notifications/${id}/read`, {
+            const res = await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -75,7 +76,7 @@ export default function TopNav() {
         e.stopPropagation();
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch(`http://localhost:8080/api/notifications/${id}/resolve`, {
+            const res = await fetch(`${API_BASE_URL}/api/notifications/${id}/resolve`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -96,7 +97,7 @@ export default function TopNav() {
         e.stopPropagation();
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch(`http://localhost:8080/api/notifications/${id}/acknowledge`, {
+            const res = await fetch(`${API_BASE_URL}/api/notifications/${id}/acknowledge`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

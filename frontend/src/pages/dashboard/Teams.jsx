@@ -2,7 +2,8 @@ import { motion } from 'framer-motion';
 import { Users, Plus, UserPlus, Box, Trash2, Edit2 } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../apiConfig';
 import { useSearchParams } from 'react-router-dom';
 
 export default function Teams() {
@@ -32,7 +33,7 @@ export default function Teams() {
 
             try {
                 // Fetch Services
-                const srvRes = await fetch('http://localhost:8080/api/services', {
+                const srvRes = await fetch(`${API_BASE_URL}/api/services`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (srvRes.ok) {
@@ -40,7 +41,7 @@ export default function Teams() {
                 }
 
                 // Fetch Users (only Admins can do this, so it might fail for others)
-                const userRes = await fetch('http://localhost:8080/users', {
+                const userRes = await fetch(`${API_BASE_URL}/users`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (userRes.ok) {
@@ -58,15 +59,15 @@ export default function Teams() {
         const token = localStorage.getItem('archtrace_token');
         if (!token) return;
         try {
-            const res = await fetch('http://localhost:8080/api/teams', {
+            const response = await fetch(`${API_BASE_URL}/api/teams`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) {
-                const data = await res.json();
+            if (response.ok) {
+                const data = await response.json();
                 setTeams(data);
                 localStorage.setItem('archtrace_teams', JSON.stringify(data)); // Keep for legacy/performance
             } else {
-                console.error(`Failed to fetch teams: ${res.status}`);
+                console.error(`Failed to fetch teams: ${response.status}`);
             }
         } catch (err) {
             console.error("Error fetching teams:", err);
@@ -77,7 +78,7 @@ export default function Teams() {
         if (!newTeam.name) return;
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch('http://localhost:8080/api/teams', {
+            const response = await fetch(`${API_BASE_URL}/api/teams`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -85,7 +86,7 @@ export default function Teams() {
                 },
                 body: JSON.stringify(newTeam)
             });
-            if (res.ok) {
+            if (response.ok) {
                 fetchTeams();
                 setIsModalOpen(false);
                 setNewTeam({ name: '', teamLead: '', color: 'indigo' });
@@ -99,7 +100,7 @@ export default function Teams() {
         if (!editingTeam.name) return;
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch(`http://localhost:8080/api/teams/${editingTeam.id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/teams/${editingTeam.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ export default function Teams() {
                 },
                 body: JSON.stringify(editingTeam)
             });
-            if (res.ok) {
+            if (response.ok) {
                 fetchTeams();
                 setIsEditModalOpen(false);
                 setEditingTeam({ id: null, name: '', teamLead: '', color: 'indigo' });
@@ -123,11 +124,11 @@ export default function Teams() {
         if (window.confirm(`Are you sure you want to delete the ${teamName} team?`)) {
             try {
                 const token = localStorage.getItem('archtrace_token');
-                const res = await fetch(`http://localhost:8080/api/teams/${teamId}`, {
+                const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (res.ok) {
+                if (response.ok) {
                     fetchTeams();
                 }
             } catch (err) {

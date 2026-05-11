@@ -6,6 +6,7 @@ import {
     ShieldCheck, Database, Server, Filter, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../apiConfig';
 
 export default function HistoryPage() {
     const { user } = useAuth();
@@ -23,11 +24,11 @@ export default function HistoryPage() {
     const fetchHistory = async () => {
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch('http://localhost:8080/api/audit', {
+            const response = await fetch(`${API_BASE_URL}/api/audit`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) {
-                const data = await res.json();
+            if (response.ok) {
+                const data = await response.json();
                 setHistory(data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
             }
         } catch (err) {
@@ -41,11 +42,11 @@ export default function HistoryPage() {
         if (!window.confirm("Are you sure you want to permanently delete all history logs?")) return;
         try {
             const token = localStorage.getItem('archtrace_token');
-            const res = await fetch('http://localhost:8080/api/audit', {
+            const response = await fetch(`${API_BASE_URL}/api/audit`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) {
+            if (response.ok) {
                 setHistory([]);
             }
         } catch (err) {

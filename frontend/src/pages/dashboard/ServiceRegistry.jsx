@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Filter, MoreVertical, Edit2, Trash2, RotateCw, Play } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../apiConfig';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/Toast';
 
@@ -56,11 +57,11 @@ export default function ServiceRegistry() {
         const token = localStorage.getItem('archtrace_token');
         if (!token) return;
         try {
-            const res = await fetch('http://localhost:8080/api/teams', {
+            const response = await fetch(`${API_BASE_URL}/api/teams`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) setTeams(await res.json());
-            else console.error(`Failed to fetch teams: ${res.status}`);
+            if (response.ok) setTeams(await response.json());
+            else console.error(`Failed to fetch teams: ${response.status}`);
         } catch (err) {
             console.error("Error fetching teams for registry:", err);
         }
@@ -70,7 +71,7 @@ export default function ServiceRegistry() {
         const token = localStorage.getItem('archtrace_token');
         if (!token) return;
         try {
-            const response = await fetch('http://localhost:8080/api/services', {
+            const response = await fetch(`${API_BASE_URL}/api/services`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
@@ -96,7 +97,7 @@ export default function ServiceRegistry() {
 
         try {
             const token = localStorage.getItem('archtrace_token');
-            const response = await fetch('http://localhost:8080/api/services', {
+            const response = await fetch(`${API_BASE_URL}/api/services`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ export default function ServiceRegistry() {
     const handleDelete = async (id) => {
         try {
             const token = localStorage.getItem('archtrace_token');
-            const response = await fetch(`http://localhost:8080/api/services/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/services/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -139,7 +140,7 @@ export default function ServiceRegistry() {
         if (!editingService?.name) return;
         try {
             const token = localStorage.getItem('archtrace_token');
-            const response = await fetch(`http://localhost:8080/api/services/${editingService.id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/services/${editingService.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -161,7 +162,7 @@ export default function ServiceRegistry() {
         const token = localStorage.getItem('archtrace_token');
         if (!token) return;
         try {
-            await fetch('http://localhost:8080/api/services/scan-health', {
+            await fetch(`${API_BASE_URL}/api/services/scan-health`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

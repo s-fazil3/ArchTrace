@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Plus, ArrowRight, GitBranch, ArrowDown, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../apiConfig';
 
 export default function DependencyManager() {
     const { user } = useAuth();
@@ -17,7 +18,7 @@ export default function DependencyManager() {
     const fetchServices = async () => {
         try {
             const token = localStorage.getItem('archtrace_token');
-            const response = await fetch('http://localhost:8080/api/services', {
+            const response = await fetch(`${API_BASE_URL}/api/services`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
@@ -36,7 +37,7 @@ export default function DependencyManager() {
                 console.warn("No auth token found, skipping dependencies fetch.");
                 return;
             }
-            const response = await fetch('http://localhost:8080/api/dependencies', {
+            const response = await fetch(`${API_BASE_URL}/api/dependencies`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
@@ -53,7 +54,7 @@ export default function DependencyManager() {
 
         try {
             const token = localStorage.getItem('archtrace_token');
-            const response = await fetch('http://localhost:8080/api/dependencies', {
+            const response = await fetch(`${API_BASE_URL}/api/dependencies`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -73,7 +74,7 @@ export default function DependencyManager() {
     const handleDelete = async (id) => {
         try {
             const token = localStorage.getItem('archtrace_token');
-            const response = await fetch(`http://localhost:8080/api/dependencies/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/dependencies/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
