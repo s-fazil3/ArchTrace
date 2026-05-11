@@ -27,9 +27,6 @@ function RootRedirect() {
 
   if (loading) return <div>Loading...</div>;
 
-  // Rule: Always show Landing Page at "/" unless we want to force redirect logged-in users.
-  // If we WANT to redirect logged-in users away from Landing Page, we use the logic below.
-  // Currently, it redirects based on role.
 
   if (!user) return <LandingPage />;
 

@@ -61,53 +61,83 @@ export default function ImpactAnalysis() {
                     if (!graph[targetName]) graph[targetName] = [];
 
                     // DIRECTED IMPACT: If Source depends on Target, then Target change impacts Source.
-                    graph[targetName].push(sourceName);
+                    graph[targetName].push({ name: sourceName, depRisk: d.risk || 'Medium' });
                 });
 
-                const visited = new Set();
+                const visited = new Map(); // Store name -> highest risk reason
                 const queue = [selectedService.toLowerCase()];
-                visited.add(selectedService.toLowerCase());
+                // We add the root with a dummy risk
+                visited.set(selectedService.toLowerCase(), 'Root');
 
                 while (queue.length > 0) {
                     const current = queue.shift();
                     const neighbors = graph[current] || [];
                     for (let neighbor of neighbors) {
-                        if (!visited.has(neighbor)) {
-                            visited.add(neighbor);
-                            queue.push(neighbor);
+                        if (!visited.has(neighbor.name)) {
+                            visited.set(neighbor.name, neighbor.depRisk);
+                            queue.push(neighbor.name);
                         }
                     }
                 }
 
                 visited.delete(selectedService.toLowerCase()); // Remove the selected service itself
 
-                const affectedServicesData = Array.from(visited).map(name => {
-                    const srv = services.find(s => s.name.toLowerCase() === name.toLowerCase()) || { team: 'Unknown' };
-                    return { name: srv.name || name, team: srv.team, impact: "Moderate (Cascading Risk)" };
+                const affectedServicesData = Array.from(visited.entries()).map(([name, depRisk]) => {
+                    const srv = services.find(s => s.name.toLowerCase() === name.toLowerCase()) || { team: 'Unknown', status: 'Healthy' };
+                    
+                    let impactLabel = "Moderate (Cascading Risk)";
+                    if (depRisk === 'High' || srv.status === 'Failing' || srv.status === 'Degraded') {
+                        impactLabel = "Severe (Critical Impact)";
+                    } else if (depRisk === 'Low' && srv.status === 'Healthy') {
+                        impactLabel = "Minor (Low Risk)";
+                    }
+
+                    return { name: srv.name || name, team: srv.team, impact: impactLabel, status: srv.status || 'Healthy', depRisk };
                 });
 
                 const affectedTeams = [...new Set(affectedServicesData.map(s => s.team))].join(", ");
 
-                // Scientific Risk Calculation (Professional Model)
-                let baseRisk = 10;
-                if (changeType === 'Contract Breaking') baseRisk = 50;
-                else if (changeType === 'Schema Change') baseRisk = 35;
-                else if (changeType === 'Version Upgrade') baseRisk = 20;
-                else if (changeType === 'API Update') baseRisk = 15;
+                // Adjusted Risk Calculation based heavily on real-time status and affected services count
+                let riskScore = 0;
+                let riskLevel = 'NONE';
+                
+                if (affectedServicesData.length > 0) {
+                    let baseRisk = 0;
+                    if (changeType === 'Contract Breaking') baseRisk = 10;
+                    else if (changeType === 'Schema Change') baseRisk = 5;
+                    else if (changeType === 'Version Upgrade') baseRisk = 2;
+                    else if (changeType === 'API Update') baseRisk = 0;
 
-                const cascadeWeight = affectedServicesData.length * 12;
-                const riskScore = Math.min(95, baseRisk + cascadeWeight);
+                    let cascadeWeight = 0;
+                    affectedServicesData.forEach(srv => {
+                        let weight = 10; // Base weight per affected service
+                        
+                        // Real-time status impact
+                        if (srv.status === 'Failing') weight += 10;
+                        else if (srv.status === 'Degraded') weight += 5;
+                        
+                        // Dependency criticality
+                        if (srv.depRisk === 'High') weight += 5;
+                        else if (srv.depRisk === 'Medium') weight += 2;
+                        
+                        cascadeWeight += weight;
+                    });
 
-                let riskLevel = 'LOW';
-                if (riskScore > 80) riskLevel = 'CATASTROPHIC';
-                else if (riskScore > 50) riskLevel = 'HIGH';
-                else if (riskScore > 25) riskLevel = 'MEDIUM';
+                    riskScore = Math.min(95, baseRisk + cascadeWeight);
+
+                    if (riskScore > 80) riskLevel = 'CATASTROPHIC';
+                    else if (riskScore > 50) riskLevel = 'HIGH';
+                    else if (riskScore > 25) riskLevel = 'MEDIUM';
+                    else riskLevel = 'LOW';
+                }
 
                 setResults({
                     risk: riskLevel,
                     score: riskScore,
                     affectedServices: affectedServicesData,
-                    message: `Deploying this ${changeType || 'update'} to ${selectedService} has a ${riskScore}% probability of causing failures. Affected Teams: ${affectedTeams || 'None'}.`
+                    message: affectedServicesData.length === 0 
+                        ? `Deploying this ${changeType || 'update'} to ${selectedService} has no downstream impact.`
+                        : `Deploying this ${changeType || 'update'} to ${selectedService} has a ${riskScore}% probability of causing failures. Real-time conditions show ${affectedServicesData.filter(s => s.status !== 'Healthy').length} downstream service(s) currently unhealthy. Affected Teams: ${affectedTeams || 'None'}.`
                 });
             }, 1500);
         } catch (error) {
@@ -117,7 +147,10 @@ export default function ImpactAnalysis() {
     };
 
     const handleNotifyTeam = async (srv) => {
-        const msg = `URGENT: Your service '${srv.name}' is heavily impacted by changes to '${selectedService}'. Please review the architecture graph.`;
+        let msg = `URGENT: Your service '${srv.name}' is heavily impacted by changes to '${selectedService}'. Please review the architecture graph.`;
+        if (desc.trim()) {
+            msg += `\n\nChange Context/Reason:\n"${desc.trim()}"`;
+        }
 
         try {
             const token = localStorage.getItem('archtrace_token');
@@ -151,7 +184,10 @@ export default function ImpactAnalysis() {
 
         for (const teamName of uniqueTeams) {
             const teamServices = results.affectedServices.filter(s => s.team === teamName).map(s => s.name).join(", ");
-            const msg = `URGENT for ${teamName}: Changes to '${selectedService}' will impact your services: ${teamServices}. Please review.`;
+            let msg = `URGENT for ${teamName}: Changes to '${selectedService}' will impact your services: ${teamServices}. Please review.`;
+            if (desc.trim()) {
+                msg += `\n\nChange Context/Reason:\n"${desc.trim()}"`;
+            }
 
             try {
                 const token = localStorage.getItem('archtrace_token');
@@ -298,14 +334,14 @@ export default function ImpactAnalysis() {
                             >
                                 {/* Risk Card */}
                                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-1.5 h-full bg-rose-500"></div>
+                                    <div className={`absolute top-0 left-0 w-1.5 h-full ${results.risk === 'CATASTROPHIC' || results.risk === 'HIGH' ? 'bg-rose-500' : results.risk === 'MEDIUM' ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
-                                                <AlertOctagon size={18} className={results.risk === 'CATASTROPHIC' || results.risk === 'HIGH' ? 'text-rose-600' : 'text-amber-600'} />
+                                                <AlertOctagon size={18} className={results.risk === 'CATASTROPHIC' || results.risk === 'HIGH' ? 'text-rose-600' : results.risk === 'MEDIUM' ? 'text-amber-600' : 'text-emerald-500'} />
                                                 <span className="font-bold text-slate-800 uppercase tracking-wider text-sm">Risk Assessment</span>
                                             </div>
-                                            <h2 className={`text-3xl font-bold font-poppins ${results.risk === 'CATASTROPHIC' || results.risk === 'HIGH' ? 'text-rose-600' : 'text-amber-600'}`}>
+                                            <h2 className={`text-3xl font-bold font-poppins ${results.risk === 'CATASTROPHIC' || results.risk === 'HIGH' ? 'text-rose-600' : results.risk === 'MEDIUM' ? 'text-amber-600' : 'text-emerald-500'}`}>
                                                 {results.risk} RISK
                                             </h2>
                                         </div>
@@ -314,7 +350,7 @@ export default function ImpactAnalysis() {
                                             <span className="text-xs text-slate-500 uppercase tracking-widest font-semibold mt-1">Impact Score</span>
                                         </div>
                                     </div>
-                                    <p className="text-slate-600 leading-relaxed text-sm bg-rose-50 p-4 rounded-xl border border-rose-100/50">
+                                    <p className={`text-slate-600 leading-relaxed text-sm p-4 rounded-xl border ${results.risk === 'NONE' || results.risk === 'LOW' ? 'bg-emerald-50 border-emerald-100/50' : results.risk === 'MEDIUM' ? 'bg-amber-50 border-amber-100/50' : 'bg-rose-50 border-rose-100/50'}`}>
                                         {results.message}
                                     </p>
                                 </div>
@@ -343,7 +379,12 @@ export default function ImpactAnalysis() {
                                                 className="p-4 hover:bg-slate-50 transition-colors flex justify-between items-center group cursor-pointer"
                                             >
                                                 <div>
-                                                    <div className="font-semibold text-slate-800 text-sm mb-0.5 group-hover:text-indigo-600 transition-colors">{srv.name}</div>
+                                                    <div className="font-semibold text-slate-800 text-sm mb-0.5 group-hover:text-indigo-600 transition-colors flex items-center gap-2">
+                                                        {srv.name}
+                                                        {srv.status === 'Failing' && <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span></span>}
+                                                        {srv.status === 'Degraded' && <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span></span>}
+                                                        {srv.status === 'Healthy' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>}
+                                                    </div>
                                                     <div className="text-xs text-slate-500 flex items-center gap-2">
                                                         <span className="w-2 h-2 rounded-full bg-slate-300"></span> {srv.team}
                                                     </div>

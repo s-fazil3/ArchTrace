@@ -39,10 +39,8 @@ export default function ArchitectureGraph() {
                 let allServices = svcRes.ok ? await svcRes.json() : [];
                 let allDeps = depRes.ok ? await depRes.json() : [];
 
-                // Count critical services for risk badge
                 setCriticalCount(allServices.filter(s => s.status === 'Critical').length);
 
-                // Filter by team if toggled
                 let services = allServices;
                 let deps = allDeps;
 
@@ -54,16 +52,13 @@ export default function ArchitectureGraph() {
                     );
                 }
 
-                // --- Layout: group services into team columns ---
-                // Sort teams so order is deterministic
                 const teams = [...new Set(services.map(s => s.team || 'Unassigned'))].sort();
-                const COLUMN_WIDTH = 300;   // px between team columns
-                const ROW_HEIGHT = 160;     // px between nodes in same column
+                const COLUMN_WIDTH = 300;
+                const ROW_HEIGHT = 160;
                 const NODE_WIDTH = 220;
                 const START_X = 60;
                 const START_Y = 60;
 
-                // Count services per team to center column vertically
                 const teamXMap = {};
                 teams.forEach((team, i) => {
                     teamXMap[team] = START_X + i * (NODE_WIDTH + COLUMN_WIDTH);
@@ -86,40 +81,30 @@ export default function ArchitectureGraph() {
                         },
                         data: {
                             label: (
-                                <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontWeight: 700, fontSize: 13 }}>{srv.name}</div>
-                                    <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>{team}</div>
-                                    <div style={{
-                                        marginTop: 6,
-                                        display: 'inline-block',
-                                        padding: '2px 8px',
-                                        borderRadius: 12,
-                                        fontSize: 10,
-                                        fontWeight: 600,
-                                        background: srv.status === 'Critical' ? '#FEE2E2'
-                                            : srv.status === 'Warning' ? '#FEF3C7' : '#D1FAE5',
-                                        color: srv.status === 'Critical' ? '#DC2626'
-                                            : srv.status === 'Warning' ? '#D97706' : '#059669'
-                                    }}>
+                                <div className="text-center">
+                                    <div className="font-bold text-sm text-slate-800">{srv.name}</div>
+                                    <div className="text-[11px] text-slate-500 mt-0.5">{team}</div>
+                                    <div className={`mt-2 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                        srv.status === 'Critical' ? 'bg-rose-100 text-rose-600'
+                                        : srv.status === 'Warning' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'
+                                    }`}>
                                         {srv.status || 'Healthy'}
                                     </div>
                                 </div>
                             )
                         },
+                        // We use dynamic styles but prefer CSS variables for the background/border
                         style: {
-                            background: isHighlighted ? '#EEF2FF'
-                                : srv.status === 'Critical' ? '#FEF2F2'
-                                    : srv.status === 'Warning' ? '#FFFBEB' : '#FFFFFF',
+                            background: isHighlighted ? 'var(--color-indigo-50, #EEF2FF)' : 'var(--color-surface, #FFFFFF)',
                             borderColor: isHighlighted ? '#4F46E5'
                                 : srv.status === 'Critical' ? '#EF4444'
-                                    : srv.status === 'Warning' ? '#F59E0B' : '#C7D2FE',
+                                    : srv.status === 'Warning' ? '#F59E0B' : 'var(--color-border, #C7D2FE)',
                             borderWidth: isHighlighted ? 3 : 1.5,
                             borderRadius: 14,
                             width: NODE_WIDTH,
-                            boxShadow: isHighlighted
-                                ? '0 0 0 4px rgba(79,70,229,0.2), 0 4px 16px rgba(79,70,229,0.15)'
-                                : '0 2px 8px rgba(0,0,0,0.06)',
-                            transition: 'all 0.3s'
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                            transition: 'all 0.3s',
+                            color: 'var(--color-text)'
                         }
                     };
                 });
@@ -141,8 +126,8 @@ export default function ArchitectureGraph() {
                         stroke: dep.risk === 'High' ? '#EF4444' : dep.risk === 'Medium' ? '#F59E0B' : '#10B981',
                         strokeWidth: 2.5,
                     },
-                    labelStyle: { fill: '#0f172a', fontWeight: 700, fontSize: 11 },
-                    labelBgStyle: { fill: '#ffffff', fillOpacity: 0.95 },
+                    // Label styles will now respect the .dark classes from index.css because we removed hardcoded fill
+                    labelStyle: { fontWeight: 700, fontSize: 11 },
                     labelBgPadding: [6, 4],
                     labelBgBorderRadius: 6,
                 }));
@@ -201,15 +186,15 @@ export default function ArchitectureGraph() {
                 className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative"
             >
                 {/* Legend */}
-                <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm p-3 rounded-xl border border-slate-200 shadow-sm text-xs space-y-2">
-                    <p className="font-semibold text-slate-700 mb-1">Legend</p>
-                    <div className="flex items-center gap-2"><div className="w-6 h-0.5 bg-rose-500 rounded" /> <span className="text-slate-600">High Risk</span></div>
-                    <div className="flex items-center gap-2"><div className="w-6 h-0.5 bg-amber-400 rounded" /> <span className="text-slate-600">Medium Risk</span></div>
-                    <div className="flex items-center gap-2"><div className="w-6 h-0.5 bg-emerald-500 rounded" /> <span className="text-slate-600">Low Risk</span></div>
-                    <div className="border-t border-slate-100 pt-2 mt-1 space-y-1">
-                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-indigo-50 border-2 border-indigo-500" /> <span className="text-slate-600">Highlighted</span></div>
-                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-rose-50 border border-rose-400" /> <span className="text-slate-600">Critical</span></div>
-                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-amber-50 border border-amber-400" /> <span className="text-slate-600">Warning</span></div>
+                <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm dark:bg-slate-900/95 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs space-y-2">
+                    <p className="font-semibold text-slate-700 dark:text-slate-200 mb-1">Legend</p>
+                    <div className="flex items-center gap-2"><div className="w-6 h-0.5 bg-rose-500 rounded" /> <span className="text-slate-600 dark:text-slate-400">High Risk</span></div>
+                    <div className="flex items-center gap-2"><div className="w-6 h-0.5 bg-amber-400 rounded" /> <span className="text-slate-600 dark:text-slate-400">Medium Risk</span></div>
+                    <div className="flex items-center gap-2"><div className="w-6 h-0.5 bg-emerald-500 rounded" /> <span className="text-slate-600 dark:text-slate-400">Low Risk</span></div>
+                    <div className="border-t border-slate-100 dark:border-slate-800 pt-2 mt-1 space-y-1">
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-indigo-50 border-2 border-indigo-500" /> <span className="text-slate-600 dark:text-slate-400">Highlighted</span></div>
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-rose-50 border border-rose-400" /> <span className="text-slate-600 dark:text-slate-400">Critical</span></div>
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-amber-50 border border-amber-400" /> <span className="text-slate-600 dark:text-slate-400">Warning</span></div>
                     </div>
                 </div>
 
@@ -230,11 +215,11 @@ export default function ArchitectureGraph() {
                         nodeStrokeColor={(n) => n.style?.borderColor || '#6366f1'}
                         nodeColor={(n) => n.style?.background || '#fff'}
                         nodeBorderRadius={6}
-                        className="rounded-xl shadow border border-slate-200"
+                        className="rounded-xl shadow border border-slate-200 dark:border-slate-800"
                         style={{ bottom: 16, right: 16 }}
                     />
                     <Controls className="rounded-lg shadow-sm border border-slate-200 bg-white" style={{ bottom: 16, left: 16 }} />
-                    <Background color="#CBD5E1" gap={20} size={1} />
+                    <Background color="#CBD5E1" gap={20} size={1} className="dark:opacity-10" />
                 </ReactFlow>
             </motion.div>
         </div>
