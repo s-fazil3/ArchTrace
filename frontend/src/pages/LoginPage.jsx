@@ -4,6 +4,7 @@ import { Activity, Mail, Lock, Chrome, ArrowRight, Eye, EyeOff } from 'lucide-re
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
+import { API_BASE_URL } from '../apiConfig';
 
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function LoginPage() {
     const handleForgotPassword = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:8080/auth/forgot-password', {
+            const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: resetEmail })
@@ -38,7 +39,7 @@ export default function LoginPage() {
         const newPass = prompt("Enter your new password:");
         if (!newPass) return;
         try {
-            const response = await fetch('http://localhost:8080/auth/reset-password', {
+            const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: resetEmail, newPassword: newPass })

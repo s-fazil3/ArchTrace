@@ -38,7 +38,7 @@ export function ToastProvider({ children }) {
     };
 
     return (
-        <ToastContext.Provider value={addToast}>
+        <ToastContext.Provider value={{ toast: addToast }}>
             {children}
             <div className="fixed top-20 right-4 z-50 space-y-2 pointer-events-none">
                 <AnimatePresence>
