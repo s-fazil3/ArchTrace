@@ -14,6 +14,7 @@ import '@xyflow/react/dist/style.css';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Filter, Users, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../apiConfig';
 
 export default function ArchitectureGraph() {
     const { user } = useAuth();
@@ -32,8 +33,8 @@ export default function ArchitectureGraph() {
             try {
                 const token = localStorage.getItem('archtrace_token');
                 const [svcRes, depRes] = await Promise.all([
-                    fetch('http://localhost:8080/api/services', { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch('http://localhost:8080/api/dependencies', { headers: { 'Authorization': `Bearer ${token}` } })
+                    fetch(`${API_BASE_URL}/api/services`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(`${API_BASE_URL}/api/dependencies`, { headers: { 'Authorization': `Bearer ${token}` } })
                 ]);
 
                 let allServices = svcRes.ok ? await svcRes.json() : [];

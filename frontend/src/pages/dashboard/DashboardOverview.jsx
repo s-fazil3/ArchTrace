@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
+import { API_BASE_URL } from '../../apiConfig';
 
 export default function DashboardOverview() {
     const { user } = useAuth();
@@ -30,10 +31,10 @@ export default function DashboardOverview() {
 
         try {
             const [srvRes, depRes, teamRes, auditRes] = await Promise.all([
-                fetch('http://localhost:8080/api/services', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('http://localhost:8080/api/dependencies', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('http://localhost:8080/api/teams', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('http://localhost:8080/api/audit', { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`${API_BASE_URL}/api/services`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_BASE_URL}/api/dependencies`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_BASE_URL}/api/teams`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_BASE_URL}/api/audit`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
             const [storedServices, storedDeps, teams, auditLogs] = await Promise.all([
@@ -101,7 +102,7 @@ export default function DashboardOverview() {
             await new Promise(r => setTimeout(r, 1200));
             setScanPhase("Analyzing Response...");
 
-            const res = await fetch('http://localhost:8080/api/services/scan-health', {
+            const res = await fetch(`${API_BASE_URL}/api/services/scan-health`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
